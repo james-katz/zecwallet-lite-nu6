@@ -499,8 +499,10 @@ class Sidebar extends PureComponent<Props & RouteComponentProps, State> {
           if(a.type < 2) {
             const privKey = getPrivKeyAsString(a.address);
             return `${privKey} #${a.address}\n\n`;
-          }          
+          }
+          return ``;
         });
+        
         const exportedPrivKeys = await Promise.all(privKeysPromise);
 
         this.setState({ exportPrivKeysModalIsOpen: true, exportedPrivKeys });
