@@ -280,7 +280,8 @@ const ConfirmModalInternal: React.FC<RouteComponentProps & ConfirmModalProps> = 
   history,
 }) => {
   const defaultFee = RPC.getDefaultFee();
-  const sendingTotal = sendPageState.toaddrs.reduce((s, t) => s + t.amount, 0.0) + defaultFee;
+  // const sendingTotal = sendPageState.toaddrs.reduce((s, t) => s + t.amount, 0.0) + defaultFee;
+  const sendingTotal = sendPageState.toaddrs.reduce((s, t) => s + t.amount, 0.0);
   const { bigPart, smallPart } = Utils.splitZecAmountIntoBigSmall(sendingTotal);
 
   // Determine the tx privacy level
@@ -390,7 +391,20 @@ const ConfirmModalInternal: React.FC<RouteComponentProps & ConfirmModalProps> = 
               <ConfirmModalToAddr key={t.to} toaddr={t} info={info} />
             ))}
           </div>
-          <ConfirmModalToAddr toaddr={{ to: "Fee", amount: defaultFee, memo: "" }} info={info} />
+          {/* <ConfirmModalToAddr toaddr={{ to: "Fee", amount: defaultFee, memo: "" }} info={info} /> */}
+
+          <div className={cstyles.well}>
+            <div className={[cstyles.flexspacebetween, cstyles.margintoplarge].join(" ")}>
+              <div className={[styles.confirmModalAddress].join(" ")}>Fee</div>
+              <div className={[cstyles.verticalflex, cstyles.right].join(" ")}>
+                <div className={cstyles.large}>
+                  <div>
+                    <span>The proportional fee will be calculated and automatically deduced from sent amount.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className={cstyles.well}>
             <div className={[cstyles.flexspacebetween, cstyles.margintoplarge].join(" ")}>
@@ -546,7 +560,7 @@ export default class Send extends PureComponent<Props, SendState> {
     let totalOtherAmount: number = newToAddrs.filter((a) => a.id !== id).reduce((s, a) => s + a.amount, 0);
 
     // Add Fee
-    totalOtherAmount += RPC.getDefaultFee();
+    // totalOtherAmount += RPC.getDefaultFee();
 
     // Find the correct toAddr
     const toAddr = newToAddrs.find((a) => a.id === id) as ToAddr;

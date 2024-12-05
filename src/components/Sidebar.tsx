@@ -494,9 +494,12 @@ class Sidebar extends PureComponent<Props & RouteComponentProps, State> {
       // Get all the addresses and run export key on each of them.
       const { addresses, getPrivKeyAsString } = this.props;
       openPasswordAndUnlockIfNeeded(async () => {
+        console.log(addresses);
         const privKeysPromise = addresses.map(async (a) => {
-          const privKey = getPrivKeyAsString(a.address);
-          return `${privKey} #${a}`;
+          if(a.type < 2) {
+            const privKey = getPrivKeyAsString(a.address);
+            return `${privKey} #${a.address}\n\n`;
+          }          
         });
         const exportedPrivKeys = await Promise.all(privKeysPromise);
 

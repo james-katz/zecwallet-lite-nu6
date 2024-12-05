@@ -27,7 +27,7 @@ export default class RPC {
   fnSetWalletSettings: (settings: WalletSettings) => void;
   refreshTimerID?: NodeJS.Timeout;
   updateTimerId?: NodeJS.Timeout;
-
+  pollerID?: NodeJS.Timeout;
   updateDataLock: boolean;
 
   lastBlockHeight: number;
@@ -53,6 +53,7 @@ export default class RPC {
 
     this.refreshTimerID = undefined;
     this.updateTimerId = undefined;
+    this.pollerID = undefined;
     this.updateDataLock = false;
   }
 
@@ -60,7 +61,7 @@ export default class RPC {
     this.rpcConfig = rpcConfig;
 
     if (!this.refreshTimerID) {
-      this.refreshTimerID = setInterval(() => this.refresh(false), 3 * 60 * 1000); // 3 mins
+      this.refreshTimerID = setInterval(() => this.refresh(false), 75 * 1000); // 75 seconds
     }
 
     if (!this.updateTimerId) {
@@ -147,6 +148,9 @@ export default class RPC {
   }
 
   async refresh(fullRefresh: boolean) {
+    if(this.pollerID) {
+      console.log("Already have a sync process");
+    }
     const latestBlockHeight = await this.fetchInfo();
 
     if (fullRefresh || !this.lastBlockHeight || this.lastBlockHeight < latestBlockHeight) {
@@ -157,15 +161,17 @@ export default class RPC {
 
       // We need to wait for the sync to finish. The way we know the sync is done is
       // if the height matches the latestBlockHeight
-      let retryCount = 0;
-      const pollerID = setInterval(async () => {
+      // let retryCount = 0;
+      this.pollerID = setInterval(async () => {
         const walletHeight = RPC.fetchWalletHeight();
-        retryCount += 1;
+        // retryCount += 1;
 
         // Wait a max of 30 retries (30 secs)
-        if (walletHeight >= latestBlockHeight || retryCount > 30) {
+        // if (walletHeight >= latestBlockHeight || retryCount > 30) {
+        if (walletHeight >= latestBlockHeight) {
           // We are synced. Cancel the poll timer
-          clearInterval(pollerID);
+          clearInterval(this.pollerID);
+          this.pollerID = undefined;
 
           // And fetch the rest of the data.
           this.fetchTotalBalance();
@@ -181,6 +187,29 @@ export default class RPC {
 
           // All done
           console.log(`Finished full refresh at ${latestBlockHeight}`);
+        } else {
+          const ssStr = RPC.doSyncStatus();
+          const ss = JSON.parse(ssStr);
+          if(!ss.in_progress) {            
+            // We are synced. Cancel the poll timer
+            clearInterval(this.pollerID);
+            this.pollerID = undefined;
+
+            // And fetch the rest of the data.
+            this.fetchTotalBalance();
+            this.fetchTandZTransactions(latestBlockHeight);
+            this.getZecPrice();
+
+            this.lastBlockHeight = latestBlockHeight;
+
+            // Save the wallet
+            RPC.doSave();
+                  
+            this.updateDataLock = false;
+
+            // All done
+            console.log(`Finished full refresh at ${latestBlockHeight}`);
+          }
         }
       }, 1000);
     } else {

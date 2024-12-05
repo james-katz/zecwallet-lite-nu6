@@ -13,6 +13,9 @@ export default class Utils {
   // v3 LightwalletD
   static V3_LIGHTWALLETD: string = "https://lwdv3.zecwallet.co";
 
+  // v4 LightwalletD
+  static V4_LIGHTWALLETD: string = "https://zcashd.zec.rocks:443";
+
   static isUnified(addr: string): boolean {
     if (!addr) return false;
     return addr.startsWith("u");

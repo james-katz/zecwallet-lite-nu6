@@ -36,6 +36,8 @@ class LoadingScreenState {
 
   birthday: number; // Wallet birthday if we're restoring
 
+  numAddresses: number; // Number of addresses to create uppon wallet restore
+
   getinfoRetryCount: number;
 
   constructor() {
@@ -49,6 +51,7 @@ class LoadingScreenState {
     this.newWalletError = null;
     this.seed = "";
     this.birthday = 0;
+    this.numAddresses = 1;
   }
 }
 
@@ -124,11 +127,11 @@ class LoadingScreen extends Component<Props & RouteComponentProps, LoadingScreen
   loadServerURI = async () => {
     // Try to read the default server
     const settings = await ipcRenderer.invoke("loadSettings");
-    let server = settings?.lwd?.serveruri || Utils.V3_LIGHTWALLETD;
+    let server = settings?.lwd?.serveruri || Utils.V4_LIGHTWALLETD;
 
-    // Automatically upgrade to v2 server if you had the previous v1 server.
-    if (server === Utils.V1_LIGHTWALLETD || server === Utils.V2_LIGHTWALLETD) {
-      server = Utils.V3_LIGHTWALLETD;
+    // Automatically upgrade to v4 server if you had the previous v1 server.
+    if (server === Utils.V1_LIGHTWALLETD || server === Utils.V2_LIGHTWALLETD || server === Utils.V3_LIGHTWALLETD) {
+      server = Utils.V4_LIGHTWALLETD;
     }
 
     const newstate = new LoadingScreenState();
@@ -333,6 +336,10 @@ class LoadingScreen extends Component<Props & RouteComponentProps, LoadingScreen
     this.setState({ birthday: parseInt(e.target.value) });
   };
 
+  updateNumAddresses = (e: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ numAddresses: parseInt(e.target.value) });
+  };
+
   restoreWalletBack = () => {
     // Reset the seed and birthday and try again
     this.setState({
@@ -344,7 +351,7 @@ class LoadingScreen extends Component<Props & RouteComponentProps, LoadingScreen
   };
 
   doRestoreWallet = () => {
-    const { seed, birthday, url } = this.state;
+    const { seed, birthday, numAddresses, url } = this.state;
     console.log(`Restoring ${seed} with ${birthday}`);
 
     const allowOverwrite = true;
@@ -353,13 +360,21 @@ class LoadingScreen extends Component<Props & RouteComponentProps, LoadingScreen
     if (result.startsWith("Error")) {
       this.setState({ newWalletError: result });
     } else {
+      if(numAddresses > 1) {
+        console.log(`Generating ${numAddresses} addresses ...`);
+        for(let i = 1; i < numAddresses; i ++) {
+          native.litelib_execute("new", "u");
+          native.litelib_execute("new", "z");
+          native.litelib_execute("new", "t");
+        }        
+      }
       this.setState({ walletScreen: 0 });
       this.getInfo();
     }
   };
 
   render() {
-    const { loadingDone, currentStatus, currentStatusIsError, walletScreen, newWalletError, seed, birthday } =
+    const { loadingDone, currentStatus, currentStatusIsError, walletScreen, newWalletError, seed, birthday, numAddresses } =
       this.state;
 
     const { openServerSelectModal } = this.props;
@@ -510,6 +525,16 @@ class LoadingScreen extends Component<Props & RouteComponentProps, LoadingScreen
                         className={cstyles.inputbox}
                         value={birthday}
                         onChange={(e) => this.updateBirthday(e)}
+                      />
+                      
+                      <div className={[cstyles.large, cstyles.margintoplarge].join(" ")}>
+                        Number of addresses to recover, larger amounts will slow down synchronization.
+                      </div>
+                      <input
+                        type="number"
+                        className={cstyles.inputbox}
+                        value={numAddresses}
+                        onChange={(e) => this.updateNumAddresses(e)}
                       />
 
                       <div className={cstyles.margintoplarge}>

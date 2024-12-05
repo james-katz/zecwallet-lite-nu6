@@ -38,9 +38,11 @@ export default function ServerSelectModal({ modalIsOpen, closeModal, openErrorMo
   };
 
   const servers = [
-    { name: "Zecwallet (Default)", uri: Utils.V3_LIGHTWALLETD },
-    { name: "Zecwallet Zebra (Experimental)", uri: "https://zebra-lwd.zecwallet.co:9067" },
-    { name: "Zcash Community", uri: "https://mainnet.lightwalletd.com:9067" },
+    { name: "zec.rocks (zcashd)", uri: Utils.V4_LIGHTWALLETD },
+    { name: "zec.rocks (Auto)", uri: "https://zec.rocks:443" },
+    { name: "zec.rocks (North America)", uri: "https://na.zec.rocks:443" },
+    // { name: "Zecwallet Zebra (Experimental)", uri: "https://zebra-lwd.zecwallet.co:9067" },
+    // { name: "Zcash Community", uri: "https://mainnet.lightwalletd.com:9067" },
   ];
 
   return (
